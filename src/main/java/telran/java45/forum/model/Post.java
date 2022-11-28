@@ -13,7 +13,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @EqualsAndHashCode(of = {"id"})
 public class Post {
-
 	String id;
 	@Setter
 	String title;
