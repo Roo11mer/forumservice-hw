@@ -12,7 +12,7 @@ import telran.java45.forum.dto.DateFromToDto;
 import telran.java45.forum.dto.NewCommentDto;
 import telran.java45.forum.dto.NewPostDto;
 import telran.java45.forum.dto.PostDto;
-import telran.java45.forum.exception.PostNotFoundException;
+import telran.java45.forum.dto.exception.PostNotFoundException;
 import telran.java45.forum.model.Comment;
 import telran.java45.forum.model.Post;
 
