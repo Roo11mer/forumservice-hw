@@ -1,6 +1,6 @@
 package telran.java45.accounting.controller;
 
-import java.util.Base64;
+import java.security.Principal;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -33,9 +33,8 @@ public class UserAccountController {
 		return accountService.addUser(userRegisterDto);
 	}
 	@PostMapping("/login")
-	public UserAccountResponceDto login(@RequestHeader("Authorization") String token) {
-		String[] credential = getCredentials(token);
-		return accountService.getUser(credential[0]);
+	public UserAccountResponceDto login(Principal principal) {
+		return accountService.getUser(principal.getName());
 	}
 	
 	@DeleteMapping("/user/{login}")
@@ -59,14 +58,8 @@ public class UserAccountController {
 	}
 	
 	@PutMapping("/password")
-	public void changePassword(@RequestHeader("Authorization") String token, @RequestHeader("X-Password") String newPassword) {
-		String[] credential = getCredentials(token);
-		accountService.changePassword(credential[1], newPassword);
+	public void changePassword(Principal principal, @RequestHeader("X-Password") String newPassword) {
+		accountService.changePassword(principal.getName(), newPassword);
 	}
-	
-	private String[] getCredentials(String token) {
-		String[] basicAuth = token.split(" ");
-		String decode = new String(Base64.getDecoder().decode(basicAuth[1]));
-		return decode.split(":");
-	}
+
 }
