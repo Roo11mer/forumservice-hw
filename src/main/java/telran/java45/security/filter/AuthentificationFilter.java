@@ -58,7 +58,8 @@ public class AuthentificationFilter implements Filter {
 	}
 
     private boolean checkEndPoint(String method, String path) {
-		return !(("POST".equalsIgnoreCase(method) && path.matches("/account/register/?")));
+		return !(("POST".equalsIgnoreCase(method) && path.matches("/account/register/?"))
+				|| (path.matches("/forum/posts/(/\\w+/?)")));
 	}
 
 	private String[] getCredentials(String token) {

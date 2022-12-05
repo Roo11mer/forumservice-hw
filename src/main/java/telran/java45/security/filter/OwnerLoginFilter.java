@@ -1,7 +1,7 @@
 package telran.java45.security.filter;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.security.Principal;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -14,40 +14,34 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import lombok.RequiredArgsConstructor;
-import telran.java45.accounting.dao.UserAccountRepository;
-
 @Component
-@RequiredArgsConstructor
 @Order(30)
-public class AccountFilter implements Filter {
-	
-	final UserAccountRepository userAccountRepository;
+public class OwnerLoginFilter implements Filter {
 
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
 			throws IOException, ServletException {
 		HttpServletRequest request = (HttpServletRequest) req;
 		HttpServletResponse response = (HttpServletResponse) resp;
-		
-		if(checkEndPoint(request.getMethod(),request.getServletPath())) {
-			String loginFromPath = parseLoginFromPath(request.getRequestURI());
-			if (!request.getUserPrincipal().getName().equals(loginFromPath)){
+		String path = request.getServletPath();
+		if (checkEndPoints(request.getMethod(), request.getServletPath())) {
+			Principal principal = request.getUserPrincipal();
+			String[] arr = path.split("/");
+			String user = arr[arr.length - 1];
+			if (!user.equals(principal.getName())) {
 				response.sendError(403);
 				return;
 			}
 		}
 		chain.doFilter(request, response);
+
 	}
 
-	private String parseLoginFromPath(String requestURI) {
-		String[] parts = requestURI.split("/");
-		String res = Arrays.asList(parts).get(Arrays.binarySearch(parts, "user") + 1);
-		return res;
+	private boolean checkEndPoints(String method, String servletPath) {
+		return servletPath.matches("/account/user/\\w+/?") || servletPath.matches("/forum/post/\\w+/comment/\\w+/?")
+				|| (servletPath.matches("/forum/post/\\w+/?") && "Post".equalsIgnoreCase(method));
+
 	}
 
-	private boolean checkEndPoint(String method, String path) {
-		return "PUT".equalsIgnoreCase(method) && path.matches("/account/user/\\w+/?");
-	}
 
 }

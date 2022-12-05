@@ -1,7 +1,7 @@
 package telran.java45.security.filter;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.security.Principal;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -24,42 +24,38 @@ import telran.java45.forum.model.Post;
 @RequiredArgsConstructor
 @Order(50)
 public class DeletePostFilter implements Filter {
-	
-	final UserAccountRepository userAccountRepository;
+
 	final PostRepository postRepository;
+	final UserAccountRepository userAccountRepository;
 
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
 			throws IOException, ServletException {
 		HttpServletRequest request = (HttpServletRequest) req;
 		HttpServletResponse response = (HttpServletResponse) resp;
-		if(checkEndPoint(request.getMethod(),request.getServletPath())) {
-			String id = parseIdFromPath(request.getRequestURI());
-			Post post = postRepository.findById(id).orElse(null);
+		String path = request.getServletPath();
+		if (checkEndPoints(request.getServletPath(), request.getMethod())) {
+			Principal principal = request.getUserPrincipal();
+			String[] arr = path.split("/");
+			String postId = arr[arr.length - 1];
+			Post post = postRepository.findById(postId).orElse(null);
 			if (post == null) {
-				response.sendError(404);
+				response.sendError(404, "post id = " + postId + " not found");
 				return;
 			}
-			UserAccount userAccount = userAccountRepository.findById(request.getUserPrincipal().getName()).get();
-			if (!request.getUserPrincipal().getName().equals(post.getAuthor())
-					&& !userAccount.getRoles().contains("Moderator".toUpperCase())) {
+			String author = post.getAuthor();
+			UserAccount userAccount = userAccountRepository.findById(principal.getName()).get();
+			if (!(principal.getName().equals(author) || userAccount.getRoles().contains("Moderator".toUpperCase()))) {
 				response.sendError(403);
 				return;
 			}
-	}
+		}
 		chain.doFilter(request, response);
+
 	}
 
+	private boolean checkEndPoints(String method, String servletPath) {
+		return servletPath.matches("/forum/post/\\w+/?") && "Delete".equalsIgnoreCase(method);
 
-	private String parseIdFromPath(String requestURI) {
-		String[] parts = requestURI.split("/");
-		String res = Arrays.asList(parts).get(parts.length-1);
-		return res;
 	}
-
-
-	private boolean checkEndPoint(String method, String path) {
-		return "DELETE".equalsIgnoreCase(method) && path.matches("/forum/post/\\w+/?");
-	}
-
 }
